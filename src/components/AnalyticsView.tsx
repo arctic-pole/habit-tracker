@@ -13,13 +13,23 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MOCK_INSIGHTS } from '../constants';
+import { Habit } from '../types';
 
-const AnalyticsView: React.FC = () => {
+interface AnalyticsViewProps {
+  habits: Habit[];
+}
+
+const AnalyticsView: React.FC<AnalyticsViewProps> = ({ habits }) => {
+  const bestStreak = habits.length > 0 ? Math.max(...habits.map(h => h.streak)) : 0;
+  const totalHabits = habits.length;
+  const doneToday = habits.filter(h => h.isDoneToday).length;
+  const completionRate = totalHabits > 0 ? Math.round((doneToday / totalHabits) * 100) : 0;
+
   const stats = [
-    { label: 'Current Streak', value: '12 Days', change: '+2 from last week', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { label: 'Total Active Habits', value: '8 Active', change: '3 archived', icon: Layers, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Completion Rate', value: '85%', change: '+5% vs avg', icon: Donut, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: 'Focus Time', value: '42h', change: '+12% this month', icon: Clock, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'Best Streak', value: `${bestStreak} Days`, change: 'Across all habits', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { label: 'Total Active Habits', value: `${totalHabits} Active`, change: `${doneToday} done today`, icon: Layers, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Completion Rate', value: `${completionRate}%`, change: 'Today\'s progress', icon: Donut, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Focus Time', value: '—', change: 'Coming soon', icon: Clock, color: 'text-purple-500', bg: 'bg-purple-500/10' },
   ];
 
   return (

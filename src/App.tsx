@@ -7,50 +7,97 @@ import AnalyticsView from './components/AnalyticsView';
 import WeeklyTrackerView from './components/WeeklyTrackerView';
 import JournalView from './components/JournalView';
 import SettingsView from './components/SettingsView';
-import { MOCK_HABITS } from './constants';
+import AuthPage from './components/AuthPage';
+import { useAuth } from './context/AuthContext';
+import { getHabits, addHabit as addHabitService, toggleHabit } from './services/habitService';
 import { Habit } from './types';
-import { Plus, Filter, LayoutGrid, List, Settings } from 'lucide-react';
+import { Plus, Filter, LayoutGrid, List, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = React.useState('dashboard');
-  const [habits, setHabits] = React.useState<Habit[]>(MOCK_HABITS);
+  const [habits, setHabits] = React.useState<Habit[]>([]);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
+  const [loadingHabits, setLoadingHabits] = React.useState(true);
 
-  const handleToggleHabit = (id: string) => {
-    setHabits(prev => prev.map(h => 
+  // Load habits from Supabase when user is authenticated
+  React.useEffect(() => {
+    if (!user) {
+      setHabits([]);
+      setLoadingHabits(false);
+      return;
+    }
+
+    setLoadingHabits(true);
+    getHabits()
+      .then(setHabits)
+      .catch(console.error)
+      .finally(() => setLoadingHabits(false));
+  }, [user]);
+
+  const handleToggleHabit = async (id: string) => {
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+
+    // Optimistic update
+    setHabits(prev => prev.map(h =>
       h.id === id ? { ...h, isDoneToday: !h.isDoneToday, streak: !h.isDoneToday ? h.streak + 1 : Math.max(0, h.streak - 1) } : h
     ));
+
+    try {
+      await toggleHabit(id, habit.isDoneToday, habit.streak);
+    } catch (err) {
+      console.error('Failed to toggle habit:', err);
+      // Revert on error
+      setHabits(prev => prev.map(h =>
+        h.id === id ? { ...h, isDoneToday: habit.isDoneToday, streak: habit.streak } : h
+      ));
+    }
   };
 
-  const handleAddHabit = (newHabit: any) => {
-    const habit: Habit = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newHabit.name,
-      category: newHabit.category,
-      priority: newHabit.priority,
-      frequency: newHabit.frequency,
-      target: 'Custom',
-      streak: 0,
-      isDoneToday: false,
-      color: '#' + Math.floor(Math.random()*16777215).toString(16),
-      history: [0, 0, 0, 0, 0, 0, 0]
-    };
-    setHabits(prev => [...prev, habit]);
+  const handleAddHabit = async (newHabit: any) => {
+    try {
+      const habit = await addHabitService({
+        name: newHabit.name,
+        category: newHabit.category,
+        priority: newHabit.priority,
+        frequency: newHabit.frequency,
+        target: 'Custom',
+        color: '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'),
+      });
+      setHabits(prev => [...prev, habit]);
+    } catch (err) {
+      console.error('Failed to add habit:', err);
+    }
   };
+
+  // Show loading spinner during auth check
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background-dark flex items-center justify-center">
+        <Loader2 size={40} className="text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // Show auth page if not logged in
+  if (!user) {
+    return <AuthPage />;
+  }
 
   return (
     <div className="flex min-h-screen bg-background-dark text-white">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      
+
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
-        
+
         <main className="flex-1 p-6 md:p-10 max-w-[1440px] mx-auto w-full overflow-y-auto scrollbar-hide">
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
-              <motion.div 
+              <motion.div
                 key="dashboard"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -65,7 +112,7 @@ export default function App() {
                       Manage your daily routines and track your progress across health, fitness, and study goals. Consistency is key.
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center justify-center gap-2 h-12 px-6 bg-primary hover:bg-blue-600 text-white rounded-xl shadow-xl shadow-primary/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                   >
@@ -93,15 +140,15 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center bg-black/20 p-1 rounded-xl self-start lg:self-auto">
-                    <button 
+                    <button
                       onClick={() => setViewMode('grid')}
                       className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white/10 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                       <LayoutGrid size={20} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setViewMode('list')}
                       className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white/10 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
                     >
@@ -111,41 +158,47 @@ export default function App() {
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {habits.map(habit => (
-                    <HabitCard 
-                      key={habit.id} 
-                      habit={habit} 
-                      onToggle={handleToggleHabit} 
-                    />
-                  ))}
-                  <button 
-                    onClick={() => setIsModalOpen(true)}
-                    className="border-2 border-dashed border-white/10 hover:border-primary/50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 group transition-all min-h-[240px] bg-white/[0.02] hover:bg-primary/5"
-                  >
-                    <div className="size-16 rounded-full bg-white/5 group-hover:bg-primary/10 flex items-center justify-center transition-all">
-                      <Plus size={32} className="text-slate-500 group-hover:text-primary transition-all" />
-                    </div>
-                    <div className="text-center">
-                      <h3 className="font-bold text-lg group-hover:text-primary transition-all">New Habit</h3>
-                      <p className="text-xs text-slate-500 font-medium mt-1">Add a new routine to track</p>
-                    </div>
-                  </button>
-                </div>
+                {loadingHabits ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 size={32} className="text-primary animate-spin" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {habits.map(habit => (
+                      <HabitCard
+                        key={habit.id}
+                        habit={habit}
+                        onToggle={handleToggleHabit}
+                      />
+                    ))}
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="border-2 border-dashed border-white/10 hover:border-primary/50 rounded-2xl p-6 flex flex-col items-center justify-center gap-4 group transition-all min-h-[240px] bg-white/[0.02] hover:bg-primary/5"
+                    >
+                      <div className="size-16 rounded-full bg-white/5 group-hover:bg-primary/10 flex items-center justify-center transition-all">
+                        <Plus size={32} className="text-slate-500 group-hover:text-primary transition-all" />
+                      </div>
+                      <div className="text-center">
+                        <h3 className="font-bold text-lg group-hover:text-primary transition-all">New Habit</h3>
+                        <p className="text-xs text-slate-500 font-medium mt-1">Add a new routine to track</p>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
 
-            {activeTab === 'analytics' && <AnalyticsView key="analytics" />}
-            {activeTab === 'habits' && <WeeklyTrackerView key="habits" />}
+            {activeTab === 'analytics' && <AnalyticsView key="analytics" habits={habits} />}
+            {activeTab === 'habits' && <WeeklyTrackerView key="habits" habits={habits} />}
             {activeTab === 'journal' && <JournalView key="journal" />}
             {activeTab === 'settings' && <SettingsView key="settings" />}
           </AnimatePresence>
         </main>
       </div>
 
-      <CreateHabitModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <CreateHabitModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onSave={handleAddHabit}
       />
     </div>

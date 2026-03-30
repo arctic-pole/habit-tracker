@@ -9,6 +9,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -16,6 +17,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
+  const { signOut, user } = useAuth();
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'habits', label: 'Habits', icon: CheckSquare },
@@ -72,7 +74,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
           <HelpCircle size={20} className="group-hover:text-primary transition-colors" />
           <span className="text-sm font-semibold">Help Center</span>
         </button>
-        <button className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary/20 transition-all">
+        {user && (
+          <div className="px-2 py-3 mb-2 border-t border-white/10">
+            <p className="text-xs text-slate-500 font-medium truncate">{user.email}</p>
+          </div>
+        )}
+        <button
+          onClick={signOut}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary/10 text-primary font-bold text-sm hover:bg-primary/20 transition-all"
+        >
           <LogOut size={18} />
           Log Out
         </button>

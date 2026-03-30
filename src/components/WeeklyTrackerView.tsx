@@ -1,8 +1,12 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Plus, Check } from 'lucide-react';
-import { MOCK_HABITS } from '../constants';
+import { Habit } from '../types';
 
-const WeeklyTrackerView: React.FC = () => {
+interface WeeklyTrackerViewProps {
+  habits: Habit[];
+}
+
+const WeeklyTrackerView: React.FC<WeeklyTrackerViewProps> = ({ habits }) => {
   const days = [
     { name: 'Mon', date: 23 },
     { name: 'Tue', date: 24, active: true },
@@ -53,40 +57,48 @@ const WeeklyTrackerView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {MOCK_HABITS.map((habit) => (
-                <tr key={habit.id} className="group hover:bg-white/[0.02] transition-colors">
-                  <td className="p-6 sticky left-0 bg-[#1a202c] group-hover:bg-[#222936] transition-colors z-10 border-r border-white/5">
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="size-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: `${habit.color}15`, color: habit.color }}
-                      >
-                        <Check size={18} />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-white">{habit.name}</div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{habit.category}</div>
-                      </div>
-                    </div>
+              {habits.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-12 text-center text-slate-500 font-medium">
+                    No habits yet. Create one from the dashboard!
                   </td>
-                  {days.map((day, idx) => {
-                    const isDone = habit.history[idx] === 1;
-                    return (
-                      <td key={day.name} className={`p-6 text-center border-r border-white/5 last:border-r-0 ${day.active ? 'bg-primary/5' : ''}`}>
-                        <button 
-                          className={`size-9 mx-auto rounded-full flex items-center justify-center transition-all duration-300 ${
-                            isDone 
-                              ? 'bg-primary text-white shadow-[0_0_15px_rgba(19,91,236,0.4)] scale-100' 
-                              : 'border-2 border-white/10 hover:border-white/30 scale-95 hover:scale-100'
-                          }`}
-                        >
-                          {isDone && <Check size={18} strokeWidth={3} />}
-                        </button>
-                      </td>
-                    );
-                  })}
                 </tr>
-              ))}
+              ) : (
+                habits.map((habit) => (
+                  <tr key={habit.id} className="group hover:bg-white/[0.02] transition-colors">
+                    <td className="p-6 sticky left-0 bg-[#1a202c] group-hover:bg-[#222936] transition-colors z-10 border-r border-white/5">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="size-10 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: `${habit.color}15`, color: habit.color }}
+                        >
+                          <Check size={18} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white">{habit.name}</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{habit.category}</div>
+                        </div>
+                      </div>
+                    </td>
+                    {days.map((day, idx) => {
+                      const isDone = habit.history[idx] === 1;
+                      return (
+                        <td key={day.name} className={`p-6 text-center border-r border-white/5 last:border-r-0 ${day.active ? 'bg-primary/5' : ''}`}>
+                          <button
+                            className={`size-9 mx-auto rounded-full flex items-center justify-center transition-all duration-300 ${
+                              isDone
+                                ? 'bg-primary text-white shadow-[0_0_15px_rgba(19,91,236,0.4)] scale-100'
+                                : 'border-2 border-white/10 hover:border-white/30 scale-95 hover:scale-100'
+                            }`}
+                          >
+                            {isDone && <Check size={18} strokeWidth={3} />}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

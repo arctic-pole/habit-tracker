@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Bell, Shield, Palette, Globe, HelpCircle, LogOut, ChevronRight, Check, Moon, Sun } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
 
 interface SettingSection {
   id: string;
@@ -18,9 +19,14 @@ const SECTIONS: SettingSection[] = [
 ];
 
 export default function SettingsView() {
+  const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState('profile');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const userEmail = user?.email || 'user@example.com';
+  const userName = userEmail.split('@')[0];
+  const userInitials = userName.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex h-full gap-8">
@@ -61,7 +67,10 @@ export default function SettingsView() {
             <div className="p-2 bg-white/5 rounded-xl"><HelpCircle size={20} /></div>
             <span className="text-sm font-semibold">Help Center</span>
           </button>
-          <button className="w-full flex items-center gap-4 p-4 text-red-400 hover:bg-red-400/10 rounded-2xl transition-all">
+          <button
+            onClick={signOut}
+            className="w-full flex items-center gap-4 p-4 text-red-400 hover:bg-red-400/10 rounded-2xl transition-all"
+          >
             <div className="p-2 bg-red-400/10 rounded-xl"><LogOut size={20} /></div>
             <span className="text-sm font-semibold">Log Out</span>
           </button>
@@ -75,11 +84,11 @@ export default function SettingsView() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               <div className="flex items-center gap-6">
                 <div className="w-24 h-24 rounded-3xl bg-primary/20 flex items-center justify-center text-3xl font-bold text-primary border-2 border-primary/30">
-                  AP
+                  {userInitials}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-white">Aaratrik Paul</h3>
-                  <p className="text-white/40">aaratrik.paul2410@gmail.com</p>
+                  <h3 className="text-2xl font-bold text-white">{userName}</h3>
+                  <p className="text-white/40">{userEmail}</p>
                   <button className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                     Change Profile Photo
                   </button>
@@ -89,11 +98,11 @@ export default function SettingsView() {
               <div className="grid grid-cols-2 gap-6 pt-8 border-t border-white/10">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Full Name</label>
-                  <input type="text" defaultValue="Aaratrik Paul" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors" />
+                  <input type="text" defaultValue={userName} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Email Address</label>
-                  <input type="email" defaultValue="aaratrik.paul2410@gmail.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors" />
+                  <input type="email" defaultValue={userEmail} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Timezone</label>

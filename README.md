@@ -1,19 +1,79 @@
-<div align="center">
-</div>
+# HabitLab
 
-# Run and deploy your AI Studio app
+HabitLab is a modern habit tracking and productivity dashboard designed to help users build consistent routines and improve long-term performance through data-driven insights.
 
-This contains everything you need to run your app locally.
+Built with React, TypeScript, Tailwind CSS, and Supabase, the application focuses on clean UI, smooth interactions, and actionable analytics rather than basic checklist-style habit tracking.
 
-View your app in AI Studio: https://ai.studio/apps/dccbc1ce-17af-49b1-a8f1-0c37b6a7ab8b
+---
 
-## Run Locally
+## Features
 
-**Prerequisites:**  Node.js
+### Habit Management
+- Create, update, and track habits
+- Daily and weekly habit frequencies
+- Habit streak tracking
+- Priority-based organization
+- Category-based grouping
 
+### Analytics Dashboard
+- Consistency tracking
+- Streak analysis
+- Behavioral pattern insights
+- Productivity recommendations
+- Weekly completion history
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Productivity Tools
+- Weekly tracker
+- Journal section
+- Dashboard views
+- Grid/List layouts
+- Habit filtering system
+
+### Authentication
+- User authentication using Supabase
+- Persistent cloud-based habit storage
+- Secure session management
+
+### UI/UX
+- Modern glassmorphism-inspired interface
+- Responsive design
+- Smooth animations using Motion
+- Dark theme optimized
+- Minimal and distraction-free workflow
+
+---
+
+## Tech Stack
+
+### Frontend
+- React
+- TypeScript
+- Vite
+
+### Styling
+- Tailwind CSS
+- Custom theme system
+- Glassmorphism UI
+
+### Backend & Database
+- Supabase
+
+### Animations & Icons
+- Motion
+- Lucide React
+
+---
+
+## Project Structure
+
+```bash
+src/
+│
+├── components/
+├── context/
+├── services/
+├── views/
+├── types.ts
+├── constants.ts
+├── supabase.ts
+└── App.tsx
